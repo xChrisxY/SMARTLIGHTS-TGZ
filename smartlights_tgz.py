@@ -658,7 +658,7 @@ def crear_mapa_ejemplo():
         via_este = Via(
             10 + i, 
             i, 
-            i + 1,  # ID ficticio para nodo externo
+            i + 100,  # ID ficticio para nodo externo
             300, 
             800, 
             'unidireccional', 
@@ -668,7 +668,7 @@ def crear_mapa_ejemplo():
         # Vía desde el oeste hacia cada intersección
         via_oeste = Via(
             20 + i, 
-            i + 2,  # ID ficticio para nodo externo
+            i + 200,  # ID ficticio para nodo externo
             i, 
             300, 
             800, 
