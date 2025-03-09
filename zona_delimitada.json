@@ -1,0 +1,649 @@
+{
+    "intersecciones": [
+        {
+            "id": 1,
+            "nombre": "Intersección 1",
+            "coordenadas": {
+                "lat": 16.7588268,
+                "lng": -93.1195755
+            },
+            "semaforos": [
+                {
+                    "id": 10,
+                    "direccion": "Sur-Norte",
+                    "tiempo_verde_inicial": 34,
+                    "tiempo_amarillo_inicial": 4,
+                    "tiempo_rojo_inicial": 44
+                },
+                {
+                    "id": 26,
+                    "direccion": "Sur-Norte",
+                    "tiempo_verde_inicial": 37,
+                    "tiempo_amarillo_inicial": 3,
+                    "tiempo_rojo_inicial": 46
+                }
+            ],
+            "conexiones": [
+                4946344126,
+                496153283
+            ]
+        },
+        {
+            "id": 2,
+            "nombre": "Intersección 2",
+            "coordenadas": {
+                "lat": 16.758682,
+                "lng": -93.1187798
+            },
+            "semaforos": [
+                {
+                    "id": 15,
+                    "direccion": "Sur-Norte",
+                    "tiempo_verde_inicial": 43,
+                    "tiempo_amarillo_inicial": 3,
+                    "tiempo_rojo_inicial": 38
+                },
+                {
+                    "id": 6,
+                    "direccion": "Sur-Norte",
+                    "tiempo_verde_inicial": 42,
+                    "tiempo_amarillo_inicial": 3,
+                    "tiempo_rojo_inicial": 21
+                }
+            ],
+            "conexiones": [
+                496153277,
+                662622564,
+                4946344126
+            ]
+        },
+        {
+            "id": 3,
+            "nombre": "Intersección 3",
+            "coordenadas": {
+                "lat": 16.7595857,
+                "lng": -93.1186576
+            },
+            "semaforos": [
+                {
+                    "id": 9,
+                    "direccion": "Oeste-Este",
+                    "tiempo_verde_inicial": 25,
+                    "tiempo_amarillo_inicial": 3,
+                    "tiempo_rojo_inicial": 54
+                }
+            ],
+            "conexiones": [
+                496153278,
+                4946344123
+            ]
+        },
+        {
+            "id": 4,
+            "nombre": "Intersección 4",
+            "coordenadas": {
+                "lat": 16.7605065,
+                "lng": -93.1184543
+            },
+            "semaforos": [
+                {
+                    "id": 2,
+                    "direccion": "Oeste-Este",
+                    "tiempo_verde_inicial": 60,
+                    "tiempo_amarillo_inicial": 3,
+                    "tiempo_rojo_inicial": 39
+                },
+                {
+                    "id": 23,
+                    "direccion": "Este-Oeste",
+                    "tiempo_verde_inicial": 59,
+                    "tiempo_amarillo_inicial": 3,
+                    "tiempo_rojo_inicial": 36
+                }
+            ],
+            "conexiones": [
+                496153279,
+                662622604
+            ]
+        },
+        {
+            "id": 5,
+            "nombre": "Intersección 5",
+            "coordenadas": {
+                "lat": 16.7614362,
+                "lng": -93.1183015
+            },
+            "semaforos": [
+                {
+                    "id": 7,
+                    "direccion": "Este-Oeste",
+                    "tiempo_verde_inicial": 42,
+                    "tiempo_amarillo_inicial": 4,
+                    "tiempo_rojo_inicial": 49
+                }
+            ],
+            "conexiones": [
+                4946338818
+            ]
+        },
+        {
+            "id": 6,
+            "nombre": "Intersección 6",
+            "coordenadas": {
+                "lat": 16.75901,
+                "lng": -93.1205046
+            },
+            "semaforos": [
+                {
+                    "id": 5,
+                    "direccion": "Norte-Sur",
+                    "tiempo_verde_inicial": 25,
+                    "tiempo_amarillo_inicial": 3,
+                    "tiempo_rojo_inicial": 37
+                }
+            ],
+            "conexiones": [
+                447971007,
+                496153284
+            ]
+        },
+        {
+            "id": 7,
+            "nombre": "Intersección 7",
+            "coordenadas": {
+                "lat": 16.7598579,
+                "lng": -93.1203483
+            },
+            "semaforos": [
+                {
+                    "id": 15,
+                    "direccion": "Sur-Norte",
+                    "tiempo_verde_inicial": 43,
+                    "tiempo_amarillo_inicial": 3,
+                    "tiempo_rojo_inicial": 38
+                }
+            ],
+            "conexiones": [
+                496153286
+            ]
+        },
+        {
+            "id": 8,
+            "nombre": "Intersección 8",
+            "coordenadas": {
+                "lat": 16.7607291,
+                "lng": -93.1201985
+            },
+            "semaforos": [
+                {
+                    "id": 17,
+                    "direccion": "Norte-Sur",
+                    "tiempo_verde_inicial": 31,
+                    "tiempo_amarillo_inicial": 3,
+                    "tiempo_rojo_inicial": 39
+                }
+            ],
+            "conexiones": [
+                496153287,
+                496153521
+            ]
+        },
+        {
+            "id": 9,
+            "nombre": "Intersección 9",
+            "coordenadas": {
+                "lat": 16.7617191,
+                "lng": -93.1200795
+            },
+            "semaforos": [
+                {
+                    "id": 1,
+                    "direccion": "Este-Oeste",
+                    "tiempo_verde_inicial": 30,
+                    "tiempo_amarillo_inicial": 5,
+                    "tiempo_rojo_inicial": 59
+                },
+                {
+                    "id": 21,
+                    "direccion": "Sur-Norte",
+                    "tiempo_verde_inicial": 45,
+                    "tiempo_amarillo_inicial": 5,
+                    "tiempo_rojo_inicial": 38
+                }
+            ],
+            "conexiones": [
+                8498940960,
+                496153537
+            ]
+        },
+        {
+            "id": 10,
+            "nombre": "Intersección 10",
+            "coordenadas": {
+                "lat": 16.7597157,
+                "lng": -93.1194489
+            },
+            "semaforos": [
+                {
+                    "id": 27,
+                    "direccion": "Sur-Norte",
+                    "tiempo_verde_inicial": 46,
+                    "tiempo_amarillo_inicial": 5,
+                    "tiempo_rojo_inicial": 39
+                },
+                {
+                    "id": 5,
+                    "direccion": "Norte-Sur",
+                    "tiempo_verde_inicial": 25,
+                    "tiempo_amarillo_inicial": 3,
+                    "tiempo_rojo_inicial": 37
+                }
+            ],
+            "conexiones": [
+                447971007,
+                496153284
+            ]
+        },
+        {
+            "id": 11,
+            "nombre": "Intersección 11",
+            "coordenadas": {
+                "lat": 16.7606246,
+                "lng": -93.1193119
+            },
+            "semaforos": [
+                {
+                    "id": 22,
+                    "direccion": "Norte-Sur",
+                    "tiempo_verde_inicial": 60,
+                    "tiempo_amarillo_inicial": 3,
+                    "tiempo_rojo_inicial": 30
+                },
+                {
+                    "id": 2,
+                    "direccion": "Oeste-Este",
+                    "tiempo_verde_inicial": 60,
+                    "tiempo_amarillo_inicial": 3,
+                    "tiempo_rojo_inicial": 39
+                }
+            ],
+            "conexiones": [
+                496153507,
+                4946344121
+            ]
+        },
+        {
+            "id": 12,
+            "nombre": "Intersección 12",
+            "coordenadas": {
+                "lat": 16.7608549,
+                "lng": -93.1210494
+            },
+            "semaforos": [
+                {
+                    "id": 14,
+                    "direccion": "Oeste-Este",
+                    "tiempo_verde_inicial": 37,
+                    "tiempo_amarillo_inicial": 4,
+                    "tiempo_rojo_inicial": 53
+                }
+            ],
+            "conexiones": [
+                496153286
+            ]
+        },
+        {
+            "id": 13,
+            "nombre": "Intersección 13",
+            "coordenadas": {
+                "lat": 16.7615818,
+                "lng": -93.1191981
+            },
+            "semaforos": [
+                {
+                    "id": 17,
+                    "direccion": "Norte-Sur",
+                    "tiempo_verde_inicial": 31,
+                    "tiempo_amarillo_inicial": 3,
+                    "tiempo_rojo_inicial": 39
+                },
+                {
+                    "id": 19,
+                    "direccion": "Norte-Sur",
+                    "tiempo_verde_inicial": 34,
+                    "tiempo_amarillo_inicial": 4,
+                    "tiempo_rojo_inicial": 34
+                }
+            ],
+            "conexiones": [
+                496153521,
+                496153287
+            ]
+        },
+        {
+            "id": 14,
+            "nombre": "Intersección 14",
+            "coordenadas": {
+                "lat": 16.7618226,
+                "lng": -93.1209478
+            },
+            "semaforos": [
+                {
+                    "id": 20,
+                    "direccion": "Sur-Norte",
+                    "tiempo_verde_inicial": 26,
+                    "tiempo_amarillo_inicial": 4,
+                    "tiempo_rojo_inicial": 55
+                }
+            ],
+            "conexiones": [
+                496153523,
+                8498940960
+            ]
+        },
+        {
+            "id": 15,
+            "nombre": "Intersección 15",
+            "coordenadas": {
+                "lat": 16.7585203,
+                "lng": -93.1180314
+            },
+            "semaforos": [
+                {
+                    "id": 6,
+                    "direccion": "Sur-Norte",
+                    "tiempo_verde_inicial": 42,
+                    "tiempo_amarillo_inicial": 3,
+                    "tiempo_rojo_inicial": 21
+                }
+            ],
+            "conexiones": [
+                496153275
+            ]
+        },
+        {
+            "id": 16,
+            "nombre": "Intersección 16",
+            "coordenadas": {
+                "lat": 16.759435,
+                "lng": -93.1178749
+            },
+            "semaforos": [
+                {
+                    "id": 20,
+                    "direccion": "Sur-Norte",
+                    "tiempo_verde_inicial": 26,
+                    "tiempo_amarillo_inicial": 4,
+                    "tiempo_rojo_inicial": 55
+                },
+                {
+                    "id": 21,
+                    "direccion": "Sur-Norte",
+                    "tiempo_verde_inicial": 45,
+                    "tiempo_amarillo_inicial": 5,
+                    "tiempo_rojo_inicial": 38
+                }
+            ],
+            "conexiones": [
+                662622564,
+                496153277
+            ]
+        },
+        {
+            "id": 17,
+            "nombre": "Intersección 17",
+            "coordenadas": {
+                "lat": 16.7604276,
+                "lng": -93.1176985
+            },
+            "semaforos": [
+                {
+                    "id": 4,
+                    "direccion": "Oeste-Este",
+                    "tiempo_verde_inicial": 38,
+                    "tiempo_amarillo_inicial": 4,
+                    "tiempo_rojo_inicial": 29
+                }
+            ],
+            "conexiones": [
+                662622566
+            ]
+        },
+        {
+            "id": 18,
+            "nombre": "Intersección 18",
+            "coordenadas": {
+                "lat": 16.7613147,
+                "lng": -93.1175636
+            },
+            "semaforos": [
+                {
+                    "id": 13,
+                    "direccion": "Este-Oeste",
+                    "tiempo_verde_inicial": 37,
+                    "tiempo_amarillo_inicial": 4,
+                    "tiempo_rojo_inicial": 25
+                },
+                {
+                    "id": 24,
+                    "direccion": "Norte-Sur",
+                    "tiempo_verde_inicial": 25,
+                    "tiempo_amarillo_inicial": 3,
+                    "tiempo_rojo_inicial": 54
+                }
+            ],
+            "conexiones": [
+                662622604,
+                496153279
+            ]
+        },
+        {
+            "id": 19,
+            "nombre": "Intersección 19",
+            "coordenadas": {
+                "lat": 16.7614566,
+                "lng": -93.1184188
+            },
+            "semaforos": [
+                {
+                    "id": 25,
+                    "direccion": "Oeste-Este",
+                    "tiempo_verde_inicial": 48,
+                    "tiempo_amarillo_inicial": 5,
+                    "tiempo_rojo_inicial": 35
+                },
+                {
+                    "id": 2,
+                    "direccion": "Oeste-Este",
+                    "tiempo_verde_inicial": 60,
+                    "tiempo_amarillo_inicial": 3,
+                    "tiempo_rojo_inicial": 39
+                }
+            ],
+            "conexiones": [
+                496153537,
+                4946344121
+            ]
+        },
+        {
+            "id": 20,
+            "nombre": "Intersección 20",
+            "coordenadas": {
+                "lat": 16.7605247,
+                "lng": -93.1185595
+            },
+            "semaforos": [
+                {
+                    "id": 3,
+                    "direccion": "Sur-Norte",
+                    "tiempo_verde_inicial": 31,
+                    "tiempo_amarillo_inicial": 5,
+                    "tiempo_rojo_inicial": 28
+                },
+                {
+                    "id": 20,
+                    "direccion": "Sur-Norte",
+                    "tiempo_verde_inicial": 26,
+                    "tiempo_amarillo_inicial": 4,
+                    "tiempo_rojo_inicial": 55
+                }
+            ],
+            "conexiones": [
+                496153278,
+                4946344123
+            ]
+        }
+    ],
+    "calles": [
+        {
+            "id": 1,
+            "nombre": "Calle 1",
+            "desde_interseccion": 1,
+            "hasta_interseccion": 2,
+            "longitud": 585,
+            "velocidad_max": 60,
+            "carriles": 3,
+            "bidireccional": true,
+            "flujo_promedio": {
+                "mañana": 326,
+                "tarde": 233,
+                "noche": 56
+            }
+        },
+        {
+            "id": 2,
+            "nombre": "Calle 2",
+            "desde_interseccion": 2,
+            "hasta_interseccion": 3,
+            "longitud": 671,
+            "velocidad_max": 50,
+            "carriles": 3,
+            "bidireccional": true,
+            "flujo_promedio": {
+                "mañana": 383,
+                "tarde": 180,
+                "noche": 69
+            }
+        },
+        {
+            "id": 3,
+            "nombre": "Calle 3",
+            "desde_interseccion": 3,
+            "hasta_interseccion": 4,
+            "longitud": 767,
+            "velocidad_max": 50,
+            "carriles": 2,
+            "bidireccional": true,
+            "flujo_promedio": {
+                "mañana": 318,
+                "tarde": 184,
+                "noche": 50
+            }
+        },
+        {
+            "id": 4,
+            "nombre": "Calle 4",
+            "desde_interseccion": 4,
+            "hasta_interseccion": 5,
+            "longitud": 791,
+            "velocidad_max": 40,
+            "carriles": 2,
+            "bidireccional": false,
+            "flujo_promedio": {
+                "mañana": 313,
+                "tarde": 158,
+                "noche": 97
+            }
+        },
+        {
+            "id": 5,
+            "nombre": "Calle 5",
+            "desde_interseccion": 5,
+            "hasta_interseccion": 6,
+            "longitud": 637,
+            "velocidad_max": 60,
+            "carriles": 3,
+            "bidireccional": true,
+            "flujo_promedio": {
+                "mañana": 248,
+                "tarde": 216,
+                "noche": 79
+            }
+        },
+        {
+            "id": 6,
+            "nombre": "Calle 6",
+            "desde_interseccion": 6,
+            "hasta_interseccion": 7,
+            "longitud": 667,
+            "velocidad_max": 60,
+            "carriles": 3,
+            "bidireccional": false,
+            "flujo_promedio": {
+                "mañana": 294,
+                "tarde": 296,
+                "noche": 127
+            }
+        },
+        {
+            "id": 7,
+            "nombre": "Calle 7",
+            "desde_interseccion": 7,
+            "hasta_interseccion": 8,
+            "longitud": 365,
+            "velocidad_max": 40,
+            "carriles": 2,
+            "bidireccional": true,
+            "flujo_promedio": {
+                "mañana": 346,
+                "tarde": 240,
+                "noche": 90
+            }
+        },
+        {
+            "id": 8,
+            "nombre": "Calle 8",
+            "desde_interseccion": 8,
+            "hasta_interseccion": 9,
+            "longitud": 309,
+            "velocidad_max": 50,
+            "carriles": 3,
+            "bidireccional": false,
+            "flujo_promedio": {
+                "mañana": 243,
+                "tarde": 174,
+                "noche": 133
+            }
+        },
+        {
+            "id": 9,
+            "nombre": "Calle 9",
+            "desde_interseccion": 9,
+            "hasta_interseccion": 10,
+            "longitud": 435,
+            "velocidad_max": 60,
+            "carriles": 3,
+            "bidireccional": false,
+            "flujo_promedio": {
+                "mañana": 225,
+                "tarde": 217,
+                "noche": 64
+            }
+        },
+        {
+            "id": 10,
+            "nombre": "Calle 10",
+            "desde_interseccion": 10,
+            "hasta_interseccion": 11,
+            "longitud": 464,
+            "velocidad_max": 60,
+            "carriles": 3,
+            "bidireccional": true,
+            "flujo_promedio": {
+                "mañana": 343,
+                "tarde": 195,
+                "noche": 81
+            }
+        }
+    ]
+}

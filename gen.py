@@ -2,6 +2,73 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 from collections import deque
+import json
+import folium
+import json
+import matplotlib.colors as mcolors
+from matplotlib.cm import get_cmap
+import io
+import base64
+from IPython.display import display, HTML
+
+# Modificación en la función cargar_red_vial
+def cargar_red_vial(archivo_json):
+    """Carga la red vial desde un archivo JSON"""
+    with open(archivo_json, 'r', encoding='utf-8') as f:
+        datos = json.load(f)
+    
+    # Crear diccionario de intersecciones para referenciar
+    intersecciones_dict = {}
+    
+    # Primero crear todas las intersecciones con sus semáforos
+    for interseccion_data in datos['intersecciones']:
+        semaforos = []
+        for semaforo_data in interseccion_data['semaforos']:
+            semaforo = Semaforo(
+                id=semaforo_data['id'],
+                tiempo_verde=semaforo_data['tiempo_verde_inicial'],
+                tiempo_amarillo=semaforo_data['tiempo_amarillo_inicial'],
+                tiempo_rojo=semaforo_data['tiempo_rojo_inicial'],
+                desfase=0  # Inicialmente sin desfase
+            )
+            semaforos.append(semaforo)
+
+        # Incluir coordenadas si están disponibles
+        coordenadas = interseccion_data.get('coordenadas', None)
+        
+        interseccion = Interseccion(
+            id=interseccion_data['id'],
+            semaforos=semaforos,
+            nombre=interseccion_data.get('nombre', ''),
+            coordenadas=coordenadas
+        )
+        intersecciones_dict[interseccion.id] = interseccion
+
+            # Luego establecer las conexiones entre intersecciones
+    for interseccion_data in datos['intersecciones']:
+        interseccion = intersecciones_dict[interseccion_data['id']]
+        for conexion_id in interseccion_data['conexiones']:
+            if conexion_id in intersecciones_dict:
+                interseccion.conexiones.append(intersecciones_dict[conexion_id])
+    
+    # Crear la red vial
+    red = RedVial(list(intersecciones_dict.values()))
+    
+    # Configurar las calles y flujos de tráfico
+    for calle_data in datos['calles']:
+        # Aquí puedes agregar más configuración según tus necesidades
+        desde = intersecciones_dict[calle_data['desde_interseccion']]
+        hasta = intersecciones_dict[calle_data['hasta_interseccion']]
+        red.agregar_flujo_calle(
+            desde.id, 
+            hasta.id, 
+            calle_data['flujo_promedio']['mañana'],
+            calle_data['flujo_promedio']['tarde'],
+            calle_data['flujo_promedio']['noche']
+        )
+    
+    return red
+
 
 class Semaforo:
     def __init__(self, id, tiempo_verde=30, tiempo_amarillo=3, tiempo_rojo=30, desfase=0):
@@ -27,11 +94,13 @@ class Semaforo:
         return f"Semáforo {self.id}: Verde={self.tiempo_verde}s, Amarillo={self.tiempo_amarillo}s, Rojo={self.tiempo_rojo}s, Desfase={self.desfase}s"
 
 class Interseccion:
-    def __init__(self, id, semaforos, conexiones=None):
+    def __init__(self, id, semaforos, conexiones=None, nombre='', coordenadas=None):
         self.id = id
         self.semaforos = semaforos  # Lista de semáforos en esta intersección
         self.conexiones = conexiones if conexiones else []  # Conexiones a otras intersecciones
         self.cola_vehiculos = {s.id: deque() for s in semaforos}  # Colas de vehículos por dirección
+        self.nombre = nombre
+        self.coordenadas = coordenadas
     
     def __str__(self):
         return f"Intersección {self.id}: {len(self.semaforos)} semáforos, {len(self.conexiones)} conexiones"
@@ -40,6 +109,7 @@ class RedVial:
     def __init__(self, intersecciones):
         self.intersecciones = intersecciones
         self.tiempo_simulacion = 0
+        self.flujos_calles = {}
     
     def simular_llegada_poisson(self, tasa_llegada, duracion=3600):
         """Simula la llegada de vehículos siguiendo una distribución de Poisson"""
@@ -88,6 +158,14 @@ class RedVial:
             
         return tiempo_promedio, congestión
 
+    def agregar_flujo_calle(self, desde_id, hasta_id, flujo_mañana, flujo_tarde, flujo_noche):
+        """Agrega información de flujo entre dos intersecciones"""
+        self.flujos_calles[(desde_id, hasta_id)] = {
+            'mañana': flujo_mañana,
+            'tarde': flujo_tarde,
+            'noche': flujo_noche
+        }
+
 class IndividuoAG:
     def __init__(self, num_semaforos):
         self.cromosoma = []
@@ -104,13 +182,30 @@ class IndividuoAG:
     
     def calcular_fitness(self, red_vial, tasa_llegada=0.2, duracion_sim=3600):
         """Calcula el fitness del individuo basado en la simulación de tráfico"""
-        # Actualizar la configuración de semáforos en la red vial
+            # Actualizar la configuración de semáforos en la red vial
+            # Actualizar la configuración de semáforos en la red vial
         semaforo_idx = 0
         for interseccion in red_vial.intersecciones:
+            # Guardar los IDs originales
+            ids_originales = [sem.id for sem in interseccion.semaforos]
+            
             for i, _ in enumerate(interseccion.semaforos):
                 if semaforo_idx < len(self.cromosoma):
-                    interseccion.semaforos[i] = self.cromosoma[semaforo_idx]
+                    # Crear una copia del semáforo del cromosoma pero mantener el ID original
+                    nuevo_semaforo = Semaforo(
+                        id=ids_originales[i],
+                        tiempo_verde=self.cromosoma[semaforo_idx].tiempo_verde,
+                        tiempo_amarillo=self.cromosoma[semaforo_idx].tiempo_amarillo,
+                        tiempo_rojo=self.cromosoma[semaforo_idx].tiempo_rojo,
+                        desfase=self.cromosoma[semaforo_idx].desfase
+                    )
+                    interseccion.semaforos[i] = nuevo_semaforo
                     semaforo_idx += 1
+        
+        # Reiniciar las colas de vehículos
+        for interseccion in red_vial.intersecciones:
+            for semaforo_id in interseccion.cola_vehiculos:
+                interseccion.cola_vehiculos[semaforo_id] = deque() 
         
         # Reiniciar las colas de vehículos
         for interseccion in red_vial.intersecciones:
@@ -368,12 +463,13 @@ def crear_red_ejemplo():
 def main():
     # Crear red vial de ejemplo
     red_ejemplo = crear_red_ejemplo()
+    red_vial = cargar_red_vial("zona_delimitada.json")
     
     # Configurar y ejecutar algoritmo genético
     ag = AlgoritmoGenetico(
         tamaño_poblacion=50,
-        num_semaforos=4,  # 4 semáforos en el ejemplo
-        red_vial=red_ejemplo,
+        num_semaforos=len([s for i in red_vial.intersecciones for s in i.semaforos]),  # 4 semáforos en el ejemplo
+        red_vial=red_vial,
         prob_cruce=0.8,
         prob_mutacion=0.1,
         elitismo=0.05,
@@ -394,6 +490,491 @@ def main():
         print(f"\nSolución #{i+1} (Fitness: {sol.fitness:.6f}):")
         for semaforo in sol.cromosoma:
             print(semaforo)
+
+
+def visualizar_red_vial(red_vial, mejor_solucion=None, archivo_salida='mapa_semaforos.html'):
+    """
+    Visualiza la red vial y los semáforos optimizados en un mapa interactivo usando Folium
+    
+    Parámetros:
+    - red_vial: objeto RedVial con las intersecciones y conexiones
+    - mejor_solucion: objeto IndividuoAG con la mejor solución del algoritmo genético
+    - archivo_salida: nombre del archivo HTML donde se guardará el mapa
+    """
+    # Obtener el centro aproximado del mapa (promedio de coordenadas)
+    coordenadas = [i.coordenadas for i in red_vial.intersecciones if i.coordenadas]
+    
+    if not coordenadas:
+        # Default coordinates for Tuxtla Gutiérrez if no coordinates in data
+        centro_mapa = [16.7506, -93.1029]
+    else:
+        # Check the format of coordinates
+        first_coord = coordenadas[0]
+        
+        # If coordinates are in dictionary format
+        if isinstance(first_coord, dict):
+            # Determine the key names (they might be 'lat'/'lng' or 'latitude'/'longitude')
+            lat_key = next(key for key in first_coord.keys() if 'lat' in key.lower())
+            lng_key = next(key for key in first_coord.keys() if 'lon' in key.lower() or 'lng' in key.lower())
+            
+            latitudes = [c[lat_key] for c in coordenadas]
+            longitudes = [c[lng_key] for c in coordenadas]
+        # If coordinates are in a list/tuple format but need to be accessed differently
+        elif hasattr(first_coord, '__iter__') and not isinstance(first_coord, (str, bytes)):
+            latitudes = [c[0] if isinstance(c, (list, tuple)) else c.latitude for c in coordenadas]
+            longitudes = [c[1] if isinstance(c, (list, tuple)) else c.longitude for c in coordenadas]
+        else:
+            # Print debug info
+            print(f"Coordinate format: {type(first_coord)}")
+            print(f"Sample coordinate: {first_coord}")
+            # Default to center of Tuxtla Gutiérrez
+            centro_mapa = [16.7506, -93.1029]
+            return
+            
+        centro_mapa = [sum(latitudes) / len(latitudes), sum(longitudes) / len(longitudes)]
+    # Crear mapa base
+    mapa = folium.Map(location=centro_mapa, zoom_start=14, 
+                     tiles='OpenStreetMap')
+    
+    # Crear colormap para representar flujo de tráfico
+    cmap = get_cmap('YlOrRd')
+    
+    # Encontrar el flujo máximo para normalizar colores
+    flujo_max = 0
+    for (desde_id, hasta_id), flujos in red_vial.flujos_calles.items():
+        for periodo, flujo in flujos.items():
+            flujo_max = max(flujo_max, flujo)
+    
+    # Aplicar la solución del AG si existe
+    if mejor_solucion:
+        semaforo_idx = 0
+        for interseccion in red_vial.intersecciones:
+            ids_originales = [sem.id for sem in interseccion.semaforos]
+            for i, _ in enumerate(interseccion.semaforos):
+                if semaforo_idx < len(mejor_solucion.cromosoma):
+                    # Actualizar semáforos con la mejor solución
+                    nuevo_semaforo = Semaforo(
+                        id=ids_originales[i],
+                        tiempo_verde=mejor_solucion.cromosoma[semaforo_idx].tiempo_verde,
+                        tiempo_amarillo=mejor_solucion.cromosoma[semaforo_idx].tiempo_amarillo,
+                        tiempo_rojo=mejor_solucion.cromosoma[semaforo_idx].tiempo_rojo,
+                        desfase=mejor_solucion.cromosoma[semaforo_idx].desfase
+                    )
+                    interseccion.semaforos[i] = nuevo_semaforo
+                    semaforo_idx += 1
+    
+    # Crear líneas para representar las calles
+    for interseccion in red_vial.intersecciones:
+        # Verificar si hay coordenadas y validar que sean numéricas
+        if not interseccion.coordenadas:
+            print(f"Advertencia: La intersección {interseccion.id} no tiene coordenadas")
+            continue
+        
+        # Imprimir para depuración
+        print(f"Procesando intersección: {interseccion.id}, coordenadas: {interseccion.coordenadas}, tipo: {type(interseccion.coordenadas)}")
+        
+        # Verificar el formato de las coordenadas y convertirlas a valores numéricos
+        try:
+            if isinstance(interseccion.coordenadas, dict):
+                # Si es un diccionario, intenta extraer lat/lng o latitude/longitude
+                keys = interseccion.coordenadas.keys()
+                lat_key = next((k for k in keys if 'lat' in k.lower()), None)
+                lng_key = next((k for k in keys if 'lng' in k.lower() or 'lon' in k.lower()), None)
+                
+                if lat_key and lng_key:
+                    origen_lat = float(interseccion.coordenadas[lat_key])
+                    origen_lon = float(interseccion.coordenadas[lng_key])
+                else:
+                    print(f"Error: No se pueden identificar las claves lat/lng en: {interseccion.coordenadas}")
+                    continue
+            elif isinstance(interseccion.coordenadas, (list, tuple)) and len(interseccion.coordenadas) >= 2:
+                # Si es una lista o tupla, toma los primeros dos elementos
+                origen_lat = float(interseccion.coordenadas[0])
+                origen_lon = float(interseccion.coordenadas[1])
+            else:
+                # Intenta acceder a los atributos latitude/longitude
+                try:
+                    origen_lat = float(interseccion.coordenadas.latitude)
+                    origen_lon = float(interseccion.coordenadas.longitude)
+                except AttributeError:
+                    print(f"Error: Formato de coordenadas no reconocido: {interseccion.coordenadas}")
+                    continue
+        except (ValueError, TypeError) as e:
+            print(f"Error al convertir coordenadas para la intersección {interseccion.id}: {e}")
+            print(f"Valor de coordenadas: {interseccion.coordenadas}")
+            continue
+        
+        # Añadir marcador para cada intersección
+        popup_text = f"<b>Intersección: {interseccion.nombre or interseccion.id}</b><br>"
+        popup_text += "<b>Semáforos:</b><br>"
+        
+        for semaforo in interseccion.semaforos:
+            popup_text += f"ID: {semaforo.id}<br>"
+            popup_text += f"Verde: {semaforo.tiempo_verde}s, "
+            popup_text += f"Amarillo: {semaforo.tiempo_amarillo}s, "
+            popup_text += f"Rojo: {semaforo.tiempo_rojo}s, "
+            popup_text += f"Desfase: {semaforo.desfase}s<br>"
+        
+        # Crear gráfico de pastel para mostrar distribución de tiempos en semáforo
+        if interseccion.semaforos:
+            fig, ax = plt.subplots(figsize=(4, 3))
+            semaforo = interseccion.semaforos[0]  # Tomamos el primer semáforo como ejemplo
+            tiempos = [semaforo.tiempo_verde, semaforo.tiempo_amarillo, semaforo.tiempo_rojo]
+            labels = ['Verde', 'Amarillo', 'Rojo']
+            colors = ['green', 'yellow', 'red']
+            ax.pie(tiempos, labels=labels, colors=colors, autopct='%1.1f%%')
+            ax.set_title(f'Distribución de tiempos\nSemáforo {semaforo.id}')
+            
+            # Convertir gráfico a imagen codificada en base64
+            img = io.BytesIO()
+            plt.savefig(img, format='png', bbox_inches='tight')
+            plt.close(fig)
+            img.seek(0)
+            img_str = base64.b64encode(img.read()).decode()
+            
+            # Añadir gráfico al popup
+            popup_text += f'<img src="data:image/png;base64,{img_str}" width="300">'
+        
+        # Verificar que las coordenadas sean válidas para folium
+        try:
+            folium.Marker(
+                [origen_lat, origen_lon],
+                popup=folium.Popup(popup_text, max_width=400),
+                tooltip=f"Intersección {interseccion.id}",
+                icon=folium.Icon(icon='traffic-light', prefix='fa', color='blue')
+            ).add_to(mapa)
+        except ValueError as e:
+            print(f"Error al crear marcador para la intersección {interseccion.id}: {e}")
+            print(f"Coordenadas: lat={origen_lat}, lon={origen_lon}")
+            continue
+        
+        # Dibujar líneas para conectar las intersecciones
+        for conexion in interseccion.conexiones:
+            if not conexion.coordenadas:
+                continue
+            
+            # Aplicar la misma lógica de validación de coordenadas para la conexión
+            try:
+                if isinstance(conexion.coordenadas, dict):
+                    keys = conexion.coordenadas.keys()
+                    lat_key = next((k for k in keys if 'lat' in k.lower()), None)
+                    lng_key = next((k for k in keys if 'lng' in k.lower() or 'lon' in k.lower()), None)
+                    
+                    if lat_key and lng_key:
+                        destino_lat = float(conexion.coordenadas[lat_key])
+                        destino_lon = float(conexion.coordenadas[lng_key])
+                    else:
+                        continue
+                elif isinstance(conexion.coordenadas, (list, tuple)) and len(conexion.coordenadas) >= 2:
+                    destino_lat = float(conexion.coordenadas[0])
+                    destino_lon = float(conexion.coordenadas[1])
+                else:
+                    try:
+                        destino_lat = float(conexion.coordenadas.latitude)
+                        destino_lon = float(conexion.coordenadas.longitude)
+                    except AttributeError:
+                        continue
+            except (ValueError, TypeError):
+                continue
+            
+            # Obtener el flujo de tráfico para esta calle
+            flujo_calle = 100  # Valor por defecto
+            
+            # Buscar el flujo real en los datos
+            if (interseccion.id, conexion.id) in red_vial.flujos_calles:
+                # Tomar el promedio de los tres periodos
+                flujos = red_vial.flujos_calles[(interseccion.id, conexion.id)]
+                flujo_calle = (flujos['mañana'] + flujos['tarde'] + flujos['noche']) / 3
+            
+            # Normalizar el flujo para obtener color
+            flujo_norm = min(flujo_calle / flujo_max, 1.0) if flujo_max > 0 else 0.5
+            color_calle = mcolors.to_hex(cmap(flujo_norm))
+            
+            # Añadir línea con grosor proporcional al flujo
+            grosor = 2 + (flujo_norm * 8)  # Grosor entre 2 y 10
+            
+            try:
+                folium.PolyLine(
+                    [(origen_lat, origen_lon), (destino_lat, destino_lon)],
+                    color=color_calle,
+                    weight=grosor,
+                    opacity=0.8,
+                    popup=f"Flujo promedio: {flujo_calle:.1f} vehículos/h"
+                ).add_to(mapa)
+            except ValueError:
+                continue
+    
+    # Añadir leyenda para flujo de tráfico
+    leyenda_html = '''
+    <div style="position: fixed; 
+                bottom: 50px; left: 50px; width: 200px; height: 140px; 
+                border:2px solid grey; z-index:9999; font-size:14px;
+                background-color: white; padding: 10px;
+                border-radius: 5px;">
+        <p style="margin-top: 0; margin-bottom: 5px;"><b>Flujo de tráfico</b></p>
+        <div style="display: flex; align-items: center; margin-bottom: 5px;">
+            <div style="background-color: #ffffb2; width: 20px; height: 10px; margin-right: 5px;"></div>
+            <div>Bajo</div>
+        </div>
+        <div style="display: flex; align-items: center; margin-bottom: 5px;">
+            <div style="background-color: #fecc5c; width: 20px; height: 10px; margin-right: 5px;"></div>
+            <div>Medio</div>
+        </div>
+        <div style="display: flex; align-items: center; margin-bottom: 5px;">
+            <div style="background-color: #fd8d3c; width: 20px; height: 10px; margin-right: 5px;"></div>
+            <div>Alto</div>
+        </div>
+        <div style="display: flex; align-items: center;">
+            <div style="background-color: #e31a1c; width: 20px; height: 10px; margin-right: 5px;"></div>
+            <div>Muy alto</div>
+        </div>
+    </div>
+    '''
+    mapa.get_root().html.add_child(folium.Element(leyenda_html))
+    
+    # Guardar mapa a archivo HTML
+    mapa.save(archivo_salida)
+    print(f"Mapa guardado en {archivo_salida}")
+    
+    # Mostrar estadísticas de la solución
+    if mejor_solucion:
+        print("\nEstadísticas de la mejor solución:")
+        print(f"Fitness: {mejor_solucion.fitness:.6f}")
+        # Puedes calcular otras estadísticas aquí
+    
+    return mapa
+
+def generar_visualizacion_comparativa(red_vial, soluciones, duracion_sim=3600):
+    """
+    Genera gráficos comparativos de las soluciones obtenidas por el algoritmo genético
+    
+    Parámetros:
+    - red_vial: objeto RedVial 
+    - soluciones: lista de objetos IndividuoAG (mejores soluciones)
+    - duracion_sim: duración de la simulación en segundos
+    """
+    # Configuración inicial sin optimizar
+    red_original = crear_red_original(red_vial)
+    
+    # Simular y obtener métricas para la configuración original
+    tiempo_esp_original, congestion_original = simular_y_obtener_metricas(red_original, duracion_sim)
+    
+    # Simular y obtener métricas para cada solución
+    tiempos_espera = [tiempo_esp_original]
+    congestiones = [congestion_original]
+    etiquetas = ['Original']
+    
+    for i, solucion in enumerate(soluciones):
+        red_tmp = aplicar_solucion(red_vial, solucion)
+        tiempo_esp, congestion = simular_y_obtener_metricas(red_tmp, duracion_sim)
+        tiempos_espera.append(tiempo_esp)
+        congestiones.append(congestion)
+        etiquetas.append(f'Solución {i+1}')
+    
+    # Crear gráfico de tiempos de espera
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+    
+    # Gráfico de tiempos de espera
+    colores = ['gray'] + [plt.cm.viridis(i/len(soluciones)) for i in range(len(soluciones))]
+    
+    ax1.bar(etiquetas, tiempos_espera, color=colores)
+    ax1.set_title('Tiempo promedio de espera')
+    ax1.set_ylabel('Tiempo (segundos)')
+    ax1.tick_params(axis='x', rotation=45)
+    
+    # Porcentajes de mejora
+    for i in range(1, len(tiempos_espera)):
+        porcentaje = ((tiempo_esp_original - tiempos_espera[i]) / tiempo_esp_original) * 100
+        ax1.text(i, tiempos_espera[i] + 1, f'{porcentaje:.1f}%↓', 
+                ha='center', va='bottom', fontweight='bold')
+    
+    # Gráfico de congestión
+    ax2.bar(etiquetas, congestiones, color=colores)
+    ax2.set_title('Nivel de congestión')
+    ax2.set_ylabel('Vehículos en cola')
+    ax2.tick_params(axis='x', rotation=45)
+    
+    # Porcentajes de mejora
+    for i in range(1, len(congestiones)):
+        porcentaje = ((congestion_original - congestiones[i]) / congestion_original) * 100
+        ax2.text(i, congestiones[i] + 1, f'{porcentaje:.1f}%↓', 
+                ha='center', va='bottom', fontweight='bold')
+    
+    plt.tight_layout()
+    plt.savefig('comparativa_soluciones.png')
+    
+    print("Gráfico comparativo generado y guardado como 'comparativa_soluciones.png'")
+    
+    # Crear tabla de resultados
+    crear_tabla_resultados(soluciones, tiempos_espera[1:], congestiones[1:], tiempo_esp_original, congestion_original)
+    
+    return fig
+
+def crear_red_original(red_vial):
+    """Crea una copia de la red vial con la configuración original de semáforos"""
+    # Se debe implementar una copia profunda de la red vial aquí
+    # Este es un ejemplo simplificado
+    return red_vial  # Asumiendo que la red vial actual es la original
+
+def aplicar_solucion(red_vial, solucion):
+    """Aplica una solución del AG a una copia de la red vial y la retorna"""
+    # Se debe implementar una copia profunda de la red vial aquí
+    # y luego aplicar la solución
+    # Este es un ejemplo simplificado
+    return red_vial  # Idealmente, retornaría una nueva instancia con la solución aplicada
+
+def simular_y_obtener_metricas(red_vial, duracion_sim):
+    """Simula el tráfico y retorna métricas de rendimiento"""
+    # Reiniciar colas de vehículos
+    for interseccion in red_vial.intersecciones:
+        for semaforo_id in interseccion.cola_vehiculos:
+            interseccion.cola_vehiculos[semaforo_id] = deque()
+    
+    # Simular llegadas con tasa promedio
+    tasa_llegada = 0.2  # Ejemplo, ajustar según necesidad
+    red_vial.simular_llegada_poisson(tasa_llegada, duracion_sim)
+    
+    # Simular tráfico
+    tiempo_promedio, congestion = red_vial.simular_trafico(duracion_sim)
+    
+    return tiempo_promedio, congestion
+
+def crear_tabla_resultados(soluciones, tiempos_espera, congestiones, tiempo_original, congestion_original):
+    """Crea una tabla comparativa de resultados y la guarda como HTML"""
+    html = """
+    <html>
+    <head>
+        <style>
+            table {
+                border-collapse: collapse;
+                width: 100%;
+                font-family: Arial, sans-serif;
+            }
+            th, td {
+                text-align: left;
+                padding: 8px;
+                border: 1px solid #ddd;
+            }
+            th {
+                background-color: #4CAF50;
+                color: white;
+            }
+            tr:nth-child(even) {
+                background-color: #f2f2f2;
+            }
+            .mejora {
+                color: green;
+                font-weight: bold;
+            }
+        </style>
+    </head>
+    <body>
+        <h2>Comparativa de Soluciones para Optimización de Semáforos</h2>
+        <table>
+            <tr>
+                <th>Solución</th>
+                <th>Fitness</th>
+                <th>Tiempo de Espera (s)</th>
+                <th>Mejora en Tiempo</th>
+                <th>Congestión (vehículos)</th>
+                <th>Mejora en Congestión</th>
+            </tr>
+            <tr>
+                <td>Original (sin optimizar)</td>
+                <td>-</td>
+                <td>{:.2f}</td>
+                <td>-</td>
+                <td>{:.2f}</td>
+                <td>-</td>
+            </tr>
+    """.format(tiempo_original, congestion_original)
+    
+    for i, solucion in enumerate(soluciones):
+        mejora_tiempo = ((tiempo_original - tiempos_espera[i]) / tiempo_original) * 100
+        mejora_congestion = ((congestion_original - congestiones[i]) / congestion_original) * 100
+        
+        html += """
+            <tr>
+                <td>Solución {}</td>
+                <td>{:.6f}</td>
+                <td>{:.2f}</td>
+                <td class="mejora">{:.2f}%</td>
+                <td>{:.2f}</td>
+                <td class="mejora">{:.2f}%</td>
+            </tr>
+        """.format(i+1, solucion.fitness, tiempos_espera[i], mejora_tiempo, 
+                  congestiones[i], mejora_congestion)
+    
+    html += """
+        </table>
+        <p><i>Nota: Los valores de tiempo de espera son segundos promedio por vehículo.
+        La congestión representa el número promedio de vehículos en cola.</i></p>
+    </body>
+    </html>
+    """
+    
+    with open('resultados_optimizacion.html', 'w') as f:
+        f.write(html)
+    
+    print("Tabla de resultados generada y guardada como 'resultados_optimizacion.html'")
+
+def visualizar_resultados_completos(red_vial, mejores_soluciones):
+    """Función principal para generar todas las visualizaciones de resultados"""
+    # 1. Generar mapa con la mejor solución
+    mapa = visualizar_red_vial(red_vial, mejores_soluciones[0], 'mapa_mejor_solucion.html')
+    
+    # 2. Generar mapa para comparar estado original
+    mapa_original = visualizar_red_vial(crear_red_original(red_vial), None, 'mapa_original.html')
+    
+    # 3. Generar gráficos comparativos
+    grafico = generar_visualizacion_comparativa(red_vial, mejores_soluciones)
+    
+    # 4. Visualizar las tres mejores soluciones (opcional)
+    for i, solucion in enumerate(mejores_soluciones[:3]):
+        visualizar_red_vial(red_vial, solucion, f'mapa_solucion_{i+1}.html')
+    
+    print("\nVisualización completa de resultados generada con éxito.")
+    print("Archivos generados:")
+    print("- mapa_mejor_solucion.html (Mapa con la mejor configuración)")
+    print("- mapa_original.html (Mapa con la configuración original)")
+    print("- comparativa_soluciones.png (Gráfico comparativo)")
+    print("- resultados_optimizacion.html (Tabla de resultados)")
+    for i in range(min(3, len(mejores_soluciones))):
+        print(f"- mapa_solucion_{i+1}.html (Mapa con la solución #{i+1})")
+
+# Modificar la función main para incluir la visualización
+def main():
+    # Cargar red vial desde JSON
+    red_vial = cargar_red_vial("zona_delimitada.json")
+    
+    # Configurar y ejecutar algoritmo genético
+    ag = AlgoritmoGenetico(
+        tamaño_poblacion=50,
+        num_semaforos=len([s for i in red_vial.intersecciones for s in i.semaforos]),
+        red_vial=red_vial,
+        prob_cruce=0.8,
+        prob_mutacion=0.1,
+        elitismo=0.05,
+        max_generaciones=100
+    )
+    
+    # Ejecutar algoritmo
+    ag.ejecutar()
+    
+    # Graficar evolución
+    ag.graficar_evolucion()
+    
+    # Obtener mejores soluciones
+    mejores = ag.obtener_mejores_soluciones(3)
+    
+    print("\nLas tres mejores soluciones:")
+    for i, sol in enumerate(mejores):
+        print(f"\nSolución #{i+1} (Fitness: {sol.fitness:.6f}):")
+        for semaforo in sol.cromosoma:
+            print(semaforo)
+    
+    # Generar visualizaciones completas
+    visualizar_resultados_completos(red_vial, mejores)
 
 if __name__ == "__main__":
     main()
