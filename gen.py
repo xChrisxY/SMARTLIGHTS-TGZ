@@ -795,9 +795,14 @@ def generar_visualizacion_comparativa(red_vial, soluciones, duracion_sim=3600):
     ax2.tick_params(axis='x', rotation=45)
     
     # Porcentajes de mejora
-    for i in range(1, len(congestiones)):
-        porcentaje = ((congestion_original - congestiones[i]) / congestion_original) * 100
-        ax2.text(i, congestiones[i] + 1, f'{porcentaje:.1f}%↓', 
+    if congestion_original > 0:
+        print(f"\nEl valor de congestion original es -> {congestion_original}")
+        for i in range(1, len(congestiones)):
+            porcentaje = ((congestion_original - congestiones[i]) / congestion_original) * 100
+            ax2.text(i, congestiones[i] + 1, f'{porcentaje:.1f}%↓', 
+                    ha='center', va='bottom', fontweight='bold')
+    else:
+        ax2.text(i, congestiones[i] + 1, 'N/A', 
                 ha='center', va='bottom', fontweight='bold')
     
     plt.tight_layout()
@@ -845,27 +850,27 @@ def crear_tabla_resultados(soluciones, tiempos_espera, congestiones, tiempo_orig
     <html>
     <head>
         <style>
-            table {
+            table {{
                 border-collapse: collapse;
                 width: 100%;
                 font-family: Arial, sans-serif;
-            }
-            th, td {
+            }}
+            th, td {{
                 text-align: left;
                 padding: 8px;
                 border: 1px solid #ddd;
-            }
-            th {
+            }}
+            th {{
                 background-color: #4CAF50;
                 color: white;
-            }
-            tr:nth-child(even) {
+            }}
+            tr:nth-child(even) {{
                 background-color: #f2f2f2;
-            }
-            .mejora {
+            }}
+            .mejora {{
                 color: green;
                 font-weight: bold;
-            }
+            }}
         </style>
     </head>
     <body>
@@ -890,8 +895,15 @@ def crear_tabla_resultados(soluciones, tiempos_espera, congestiones, tiempo_orig
     """.format(tiempo_original, congestion_original)
     
     for i, solucion in enumerate(soluciones):
-        mejora_tiempo = ((tiempo_original - tiempos_espera[i]) / tiempo_original) * 100
-        mejora_congestion = ((congestion_original - congestiones[i]) / congestion_original) * 100
+        if tiempo_original > 0:
+            mejora_tiempo = ((tiempo_original - tiempos_espera[i]) / tiempo_original) * 100
+        else:
+            mejora_tiempo = 0
+
+        if congestion_original > 0:
+            mejora_congestion = ((congestion_original - congestiones[i]) / congestion_original) * 100
+        else:
+            mejora_congestion = 0
         
         html += """
             <tr>
