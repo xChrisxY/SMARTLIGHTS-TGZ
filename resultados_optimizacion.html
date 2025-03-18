@@ -1,80 +1,84 @@
 
-    <html>
-    <head>
-        <style>
-            table {
-                border-collapse: collapse;
-                width: 100%;
-                font-family: Arial, sans-serif;
-            }
-            th, td {
-                text-align: left;
-                padding: 8px;
-                border: 1px solid #ddd;
-            }
-            th {
-                background-color: #4CAF50;
-                color: white;
-            }
-            tr:nth-child(even) {
-                background-color: #f2f2f2;
-            }
-            .mejora {
-                color: green;
-                font-weight: bold;
-            }
-        </style>
-    </head>
-    <body>
-        <h2>Comparativa de Soluciones para Optimización de Semáforos</h2>
-        <table>
-            <tr>
-                <th>Solución</th>
-                <th>Fitness</th>
-                <th>Tiempo de Espera (s)</th>
-                <th>Mejora en Tiempo</th>
-                <th>Congestión (vehículos)</th>
-                <th>Mejora en Congestión</th>
-            </tr>
-            <tr>
-                <td>Original (sin optimizar)</td>
-                <td>-</td>
-                <td>-1583.73</td>
-                <td>-</td>
-                <td>0.00</td>
-                <td>-</td>
-            </tr>
-    
-            <tr>
-                <td>Solución 1</td>
-                <td>-0.000641</td>
-                <td>-1577.85</td>
-                <td class="mejora">0.00%</td>
-                <td>0.00</td>
-                <td class="mejora">0.00%</td>
-            </tr>
+        <html>
+        <head>
+            <style>
+                table {
+                    border-collapse: collapse;
+                    width: 100%;
+                    font-family: Arial, sans-serif;
+                }
+                th, td {
+                    text-align: left;
+                    padding: 8px;
+                    border: 1px solid #ddd;
+                }
+                th {
+                    background-color: #4CAF50;
+                    color: white;
+                }
+                tr:nth-child(even) {
+                    background-color: #f2f2f2;
+                }
+                .mejora {
+                    color: green;
+                    font-weight: bold;
+                }
+                .empeora {
+                    color: red;
+                    font-weight: bold;
+                }
+            </style>
+        </head>
+        <body>
+            <h2>Comparativa de Soluciones para Optimización de Semáforos</h2>
+            <table>
+                <tr>
+                    <th>Solución</th>
+                    <th>Fitness</th>
+                    <th>Tiempo de Espera (s)</th>
+                    <th>Mejora en Tiempo</th>
+                    <th>Congestión (vehículos)</th>
+                    <th>Mejora en Congestión</th>
+                </tr>
+                <tr>
+                    <td>Original (sin optimizar)</td>
+                    <td>-</td>
+                    <td>0.01</td>
+                    <td>-</td>
+                    <td>0.01</td>
+                    <td>-</td>
+                </tr>
         
-            <tr>
-                <td>Solución 2</td>
-                <td>-0.000642</td>
-                <td>-1592.86</td>
-                <td class="mejora">0.00%</td>
-                <td>0.00</td>
-                <td class="mejora">0.00%</td>
-            </tr>
+                <tr>
+                    <td>Solución 1</td>
+                    <td>0.018722</td>
+                    <td>0.01</td>
+                    <td class="">N/A</td>
+                    <td>0.01</td>
+                    <td class="">N/A</td>
+                </tr>
+            
+                <tr>
+                    <td>Solución 2</td>
+                    <td>0.018311</td>
+                    <td>0.01</td>
+                    <td class="">N/A</td>
+                    <td>0.01</td>
+                    <td class="">N/A</td>
+                </tr>
+            
+                <tr>
+                    <td>Solución 3</td>
+                    <td>0.017821</td>
+                    <td>0.01</td>
+                    <td class="">N/A</td>
+                    <td>0.01</td>
+                    <td class="">N/A</td>
+                </tr>
+            
+            </table>
+            <p><i>Nota: Los valores de tiempo de espera son segundos promedio por vehículo.
+            La congestión representa el número promedio de vehículos en cola.</i></p>
+        </body>
+        </html>
         
-            <tr>
-                <td>Solución 3</td>
-                <td>-0.000642</td>
-                <td>-1595.28</td>
-                <td class="mejora">0.00%</td>
-                <td>0.00</td>
-                <td class="mejora">0.00%</td>
-            </tr>
-        
-        </table>
-        <p><i>Nota: Los valores de tiempo de espera son segundos promedio por vehículo.
-        La congestión representa el número promedio de vehículos en cola.</i></p>
-    </body>
-    </html>
-    

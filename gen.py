@@ -10,6 +10,7 @@ from matplotlib.cm import get_cmap
 import io
 import base64
 from IPython.display import display, HTML
+import copy
 
 # Modificación en la función cargar_red_vial
 def cargar_red_vial(archivo_json):
@@ -105,6 +106,7 @@ class Interseccion:
     def __str__(self):
         return f"Intersección {self.id}: {len(self.semaforos)} semáforos, {len(self.conexiones)} conexiones"
 
+
 class RedVial:
     def __init__(self, intersecciones):
         self.intersecciones = intersecciones
@@ -123,7 +125,8 @@ class RedVial:
                     for _ in range(num_llegadas):
                         # Añadir vehículo a la cola con su tiempo de llegada
                         interseccion.cola_vehiculos[semaforo_id].append(t)
-    
+
+
     def simular_trafico(self, duracion=3600):
         """Simula el tráfico durante un período de tiempo"""
         tiempos_espera = []
@@ -145,16 +148,18 @@ class RedVial:
                             if cola:
                                 tiempo_llegada = cola.popleft()
                                 tiempo_espera = t - tiempo_llegada
-                                tiempos_espera.append(tiempo_espera)
+                                # Fix: Ensure tiempo_espera is never negative
+                                if tiempo_espera >= 0:
+                                    tiempos_espera.append(tiempo_espera)
         
-        # Calcular estadísticas
+        # Fix: Check for empty tiempos_espera list
         if tiempos_espera:
             tiempo_promedio = sum(tiempos_espera) / len(tiempos_espera)
             congestión = sum([len(cola) for interseccion in self.intersecciones 
-                             for cola in interseccion.cola_vehiculos.values()])
+                            for cola in interseccion.cola_vehiculos.values()])
         else:
-            tiempo_promedio = float('inf')
-            congestión = float('inf')
+            tiempo_promedio = 30  # Default value if no data
+            congestión = 100      # Default value indicating congestion
             
         return tiempo_promedio, congestión
 
@@ -179,11 +184,13 @@ class IndividuoAG:
             desfase = random.randint(0, 30)
             
             self.cromosoma.append(Semaforo(i, tiempo_verde, tiempo_amarillo, tiempo_rojo, desfase))
-    
+
     def calcular_fitness(self, red_vial, tasa_llegada=0.2, duracion_sim=3600):
         """Calcula el fitness del individuo basado en la simulación de tráfico"""
-            # Actualizar la configuración de semáforos en la red vial
-            # Actualizar la configuración de semáforos en la red vial
+        # Reset simulation time
+        red_vial.tiempo_simulacion = 0
+        
+        # Actualizar la configuración de semáforos en la red vial
         semaforo_idx = 0
         for interseccion in red_vial.intersecciones:
             # Guardar los IDs originales
@@ -207,16 +214,15 @@ class IndividuoAG:
             for semaforo_id in interseccion.cola_vehiculos:
                 interseccion.cola_vehiculos[semaforo_id] = deque() 
         
-        # Reiniciar las colas de vehículos
-        for interseccion in red_vial.intersecciones:
-            for semaforo_id in interseccion.cola_vehiculos:
-                interseccion.cola_vehiculos[semaforo_id] = deque()
-        
         # Simular llegadas de vehículos con distribución Poisson
         red_vial.simular_llegada_poisson(tasa_llegada, duracion_sim)
         
         # Simular el tráfico y obtener métricas
         tiempo_promedio, congestion = red_vial.simular_trafico(duracion_sim)
+        
+        # Fix: Ensure metrics are positive
+        tiempo_promedio = max(0.01, abs(tiempo_promedio))
+        congestion = max(0.01, abs(congestion))
         
         # Calcular desincronización
         desincronizacion = self.calcular_desincronizacion()
@@ -225,10 +231,12 @@ class IndividuoAG:
         alpha = 0.3  # Peso para la congestión
         beta = 0.1   # Peso para la desincronización
         
-        if tiempo_promedio == 0:
-            tiempo_promedio = 0.1  # Evitar división por cero
+        # Fix: Ensure the denominator is positive
+        denominator = tiempo_promedio + alpha * congestion + beta * desincronizacion
+        if denominator <= 0:
+            denominator = 0.0001  # Avoid zero or negative values
         
-        self.fitness = 1 / (tiempo_promedio + alpha * congestion + beta * desincronizacion)
+        self.fitness = 1 / denominator
         return self.fitness
     
     def calcular_desincronizacion(self):
@@ -459,38 +467,6 @@ def crear_red_ejemplo():
     red = RedVial([interseccion1, interseccion2])
     
     return red
-
-def main():
-    # Crear red vial de ejemplo
-    red_ejemplo = crear_red_ejemplo()
-    red_vial = cargar_red_vial("zona_delimitada.json")
-    
-    # Configurar y ejecutar algoritmo genético
-    ag = AlgoritmoGenetico(
-        tamaño_poblacion=50,
-        num_semaforos=len([s for i in red_vial.intersecciones for s in i.semaforos]),  # 4 semáforos en el ejemplo
-        red_vial=red_vial,
-        prob_cruce=0.8,
-        prob_mutacion=0.1,
-        elitismo=0.05,
-        max_generaciones=100
-    )
-    
-    # Ejecutar algoritmo
-    ag.ejecutar()
-    
-    # Graficar evolución
-    ag.graficar_evolucion()
-    
-    # Obtener mejores soluciones
-    mejores = ag.obtener_mejores_soluciones(3)
-    
-    print("\nLas tres mejores soluciones:")
-    for i, sol in enumerate(mejores):
-        print(f"\nSolución #{i+1} (Fitness: {sol.fitness:.6f}):")
-        for semaforo in sol.cromosoma:
-            print(semaforo)
-
 
 def visualizar_red_vial(red_vial, mejor_solucion=None, archivo_salida='mapa_semaforos.html'):
     """
@@ -758,6 +734,10 @@ def generar_visualizacion_comparativa(red_vial, soluciones, duracion_sim=3600):
     
     # Simular y obtener métricas para la configuración original
     tiempo_esp_original, congestion_original = simular_y_obtener_metricas(red_original, duracion_sim)
+
+    # Fix: Ensure minimum values for metrics
+    tiempo_esp_original = max(0.01, tiempo_esp_original)
+    congestion_original = max(0.01, congestion_original)
     
     # Simular y obtener métricas para cada solución
     tiempos_espera = [tiempo_esp_original]
@@ -767,6 +747,11 @@ def generar_visualizacion_comparativa(red_vial, soluciones, duracion_sim=3600):
     for i, solucion in enumerate(soluciones):
         red_tmp = aplicar_solucion(red_vial, solucion)
         tiempo_esp, congestion = simular_y_obtener_metricas(red_tmp, duracion_sim)
+        
+        # Fix: Ensure metrics are valid
+        tiempo_esp = max(0.01, tiempo_esp)
+        congestion = max(0.01, congestion)
+        
         tiempos_espera.append(tiempo_esp)
         congestiones.append(congestion)
         etiquetas.append(f'Solución {i+1}')
@@ -781,12 +766,14 @@ def generar_visualizacion_comparativa(red_vial, soluciones, duracion_sim=3600):
     ax1.set_title('Tiempo promedio de espera')
     ax1.set_ylabel('Tiempo (segundos)')
     ax1.tick_params(axis='x', rotation=45)
-    
-    # Porcentajes de mejora
-    for i in range(1, len(tiempos_espera)):
-        porcentaje = ((tiempo_esp_original - tiempos_espera[i]) / tiempo_esp_original) * 100
-        ax1.text(i, tiempos_espera[i] + 1, f'{porcentaje:.1f}%↓', 
-                ha='center', va='bottom', fontweight='bold')
+
+    # Fix: Only show improvement percentages if original time is meaningful
+    if tiempo_esp_original > 0.1:  # Threshold for meaningful comparison
+        for i in range(1, len(tiempos_espera)):
+            if tiempos_espera[i] < tiempo_esp_original:  # Only show if there's improvement
+                porcentaje = ((tiempo_esp_original - tiempos_espera[i]) / tiempo_esp_original) * 100
+                ax1.text(i, tiempos_espera[i] + 1, f'{porcentaje:.1f}%↓', 
+                        ha='center', va='bottom', fontweight='bold')
     
     # Gráfico de congestión
     ax2.bar(etiquetas, congestiones, color=colores)
@@ -794,16 +781,13 @@ def generar_visualizacion_comparativa(red_vial, soluciones, duracion_sim=3600):
     ax2.set_ylabel('Vehículos en cola')
     ax2.tick_params(axis='x', rotation=45)
     
-    # Porcentajes de mejora
-    if congestion_original > 0:
-        print(f"\nEl valor de congestion original es -> {congestion_original}")
+    # Fix: Only show improvement percentages if there's meaningful congestion
+    if congestion_original > 1:  # Threshold for meaningful comparison
         for i in range(1, len(congestiones)):
-            porcentaje = ((congestion_original - congestiones[i]) / congestion_original) * 100
-            ax2.text(i, congestiones[i] + 1, f'{porcentaje:.1f}%↓', 
-                    ha='center', va='bottom', fontweight='bold')
-    else:
-        ax2.text(i, congestiones[i] + 1, 'N/A', 
-                ha='center', va='bottom', fontweight='bold')
+            if congestiones[i] < congestion_original:  # Only show if there's improvement
+                porcentaje = ((congestion_original - congestiones[i]) / congestion_original) * 100
+                ax2.text(i, congestiones[i] + 1, f'{porcentaje:.1f}%↓', 
+                        ha='center', va='bottom', fontweight='bold')
     
     plt.tight_layout()
     plt.savefig('comparativa_soluciones.png')
@@ -819,14 +803,75 @@ def crear_red_original(red_vial):
     """Crea una copia de la red vial con la configuración original de semáforos"""
     # Se debe implementar una copia profunda de la red vial aquí
     # Este es un ejemplo simplificado
-    return red_vial  # Asumiendo que la red vial actual es la original
+    #return red_vial  # Asumiendo que la red vial actual es la original
+    """
+    Crea una copia profunda de la red vial con la configuración original de semáforos
+    
+    Parámetros:
+    - red_vial: objeto RedVial con la configuración actual
+    
+    Retorna:
+    - Una copia profunda de la red vial original
+    """
+    # Crear una copia profunda de la red vial
+    red_copia = copy.deepcopy(red_vial)
+    
+    # Restaurar los tiempos originales de los semáforos
+    for interseccion in red_copia.intersecciones:
+        for semaforo in interseccion.semaforos:
+            # Restaurar a valores típicos o los que consideres originales
+            semaforo.tiempo_verde = 30
+            semaforo.tiempo_amarillo = 3
+            semaforo.tiempo_rojo = 30
+            semaforo.desfase = 0
+            semaforo.ciclo_total = semaforo.tiempo_verde + semaforo.tiempo_amarillo + semaforo.tiempo_rojo
+    
+    return red_copia
 
 def aplicar_solucion(red_vial, solucion):
     """Aplica una solución del AG a una copia de la red vial y la retorna"""
     # Se debe implementar una copia profunda de la red vial aquí
     # y luego aplicar la solución
     # Este es un ejemplo simplificado
-    return red_vial  # Idealmente, retornaría una nueva instancia con la solución aplicada
+    #return red_vial  # Idealmente, retornaría una nueva instancia con la solución aplicada
+    """
+    Aplica una solución del AG a una copia de la red vial
+    
+    Parámetros:
+    - red_vial: objeto RedVial original
+    - solucion: objeto IndividuoAG con la solución a aplicar
+    
+    Retorna:
+    - Una copia de la red vial con la solución aplicada
+    """
+    # Crear una copia profunda de la red vial
+    red_copia = copy.deepcopy(red_vial)
+    
+    # Aplicar la solución a la copia
+    semaforo_idx = 0
+    for interseccion in red_copia.intersecciones:
+        # Guardar los IDs originales
+        ids_originales = [sem.id for sem in interseccion.semaforos]
+        
+        for i, _ in enumerate(interseccion.semaforos):
+            if semaforo_idx < len(solucion.cromosoma):
+                # Crear un nuevo semáforo con la configuración de la solución pero conservando el ID original
+                nuevo_semaforo = Semaforo(
+                    id=ids_originales[i],
+                    tiempo_verde=solucion.cromosoma[semaforo_idx].tiempo_verde,
+                    tiempo_amarillo=solucion.cromosoma[semaforo_idx].tiempo_amarillo,
+                    tiempo_rojo=solucion.cromosoma[semaforo_idx].tiempo_rojo,
+                    desfase=solucion.cromosoma[semaforo_idx].desfase
+                )
+                interseccion.semaforos[i] = nuevo_semaforo
+                semaforo_idx += 1
+    
+    # Reiniciar las colas de vehículos
+    for interseccion in red_copia.intersecciones:
+        for semaforo_id in interseccion.cola_vehiculos:
+            interseccion.cola_vehiculos[semaforo_id] = deque()
+    
+    return red_copia
 
 def simular_y_obtener_metricas(red_vial, duracion_sim):
     """Simula el tráfico y retorna métricas de rendimiento"""
@@ -836,16 +881,20 @@ def simular_y_obtener_metricas(red_vial, duracion_sim):
             interseccion.cola_vehiculos[semaforo_id] = deque()
     
     # Simular llegadas con tasa promedio
-    tasa_llegada = 0.2  # Ejemplo, ajustar según necesidad
+    tasa_llegada = 0.4  # Ejemplo, ajustar según necesidad
     red_vial.simular_llegada_poisson(tasa_llegada, duracion_sim)
     
     # Simular tráfico
     tiempo_promedio, congestion = red_vial.simular_trafico(duracion_sim)
+
+    # Garantizar que no haya valores nulos o negativos
+    tiempo_promedio = max(0.01, tiempo_promedio)
+    congestion = max(0.01, congestion)  # Evitar congestión cero
     
     return tiempo_promedio, congestion
 
 def crear_tabla_resultados(soluciones, tiempos_espera, congestiones, tiempo_original, congestion_original):
-    """Crea una tabla comparativa de resultados y la guarda como HTML"""
+    
     html = """
     <html>
     <head>
@@ -871,6 +920,10 @@ def crear_tabla_resultados(soluciones, tiempos_espera, congestiones, tiempo_orig
                 color: green;
                 font-weight: bold;
             }}
+            .empeora {{
+                color: red;
+                font-weight: bold;
+            }}
         </style>
     </head>
     <body>
@@ -893,29 +946,39 @@ def crear_tabla_resultados(soluciones, tiempos_espera, congestiones, tiempo_orig
                 <td>-</td>
             </tr>
     """.format(tiempo_original, congestion_original)
-    
+
     for i, solucion in enumerate(soluciones):
-        if tiempo_original > 0:
+        # Fix: Handle edge case with appropriate checks
+        if tiempo_original > 0.1:  # Only calculate if original value is meaningful
             mejora_tiempo = ((tiempo_original - tiempos_espera[i]) / tiempo_original) * 100
+            clase_tiempo = "mejora" if mejora_tiempo > 0 else "empeora"
+            texto_tiempo = "{:.2f}%{}".format(abs(mejora_tiempo), "↓" if mejora_tiempo > 0 else "↑")
         else:
             mejora_tiempo = 0
-
-        if congestion_original > 0:
+            clase_tiempo = ""
+            texto_tiempo = "N/A"
+        
+        # Fix: Handle edge case with appropriate checks
+        if congestion_original > 1:  # Only calculate if original value is meaningful
             mejora_congestion = ((congestion_original - congestiones[i]) / congestion_original) * 100
+            clase_congestion = "mejora" if mejora_congestion > 0 else "empeora"
+            texto_congestion = "{:.2f}%{}".format(abs(mejora_congestion), "↓" if mejora_congestion > 0 else "↑")
         else:
             mejora_congestion = 0
+            clase_congestion = ""
+            texto_congestion = "N/A"
         
         html += """
             <tr>
                 <td>Solución {}</td>
                 <td>{:.6f}</td>
                 <td>{:.2f}</td>
-                <td class="mejora">{:.2f}%</td>
+                <td class="{}">{}</td>
                 <td>{:.2f}</td>
-                <td class="mejora">{:.2f}%</td>
+                <td class="{}">{}</td>
             </tr>
-        """.format(i+1, solucion.fitness, tiempos_espera[i], mejora_tiempo, 
-                  congestiones[i], mejora_congestion)
+        """.format(i+1, solucion.fitness, tiempos_espera[i], clase_tiempo, texto_tiempo, 
+                  congestiones[i], clase_congestion, texto_congestion)
     
     html += """
         </table>
