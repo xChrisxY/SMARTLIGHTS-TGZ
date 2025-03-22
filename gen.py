@@ -443,30 +443,6 @@ class AlgoritmoGenetico:
         self.poblacion.sort(key=lambda ind: ind.fitness, reverse=True)
         return self.poblacion[:n]
 
-# Ejemplo de uso del algoritmo genético
-def crear_red_ejemplo():
-    # Crear semáforos para la primera intersección
-    s1 = Semaforo(0, tiempo_verde=30, tiempo_amarillo=3, tiempo_rojo=30, desfase=0)
-    s2 = Semaforo(1, tiempo_verde=30, tiempo_amarillo=3, tiempo_rojo=30, desfase=30)
-    
-    # Crear primera intersección
-    interseccion1 = Interseccion(0, [s1, s2])
-    
-    # Crear semáforos para la segunda intersección
-    s3 = Semaforo(2, tiempo_verde=30, tiempo_amarillo=3, tiempo_rojo=30, desfase=0)
-    s4 = Semaforo(3, tiempo_verde=30, tiempo_amarillo=3, tiempo_rojo=30, desfase=30)
-    
-    # Crear segunda intersección
-    interseccion2 = Interseccion(1, [s3, s4])
-    
-    # Conectar intersecciones
-    interseccion1.conexiones = [interseccion2]
-    interseccion2.conexiones = [interseccion1]
-    
-    # Crear red vial
-    red = RedVial([interseccion1, interseccion2])
-    
-    return red
 
 def visualizar_red_vial(red_vial, mejor_solucion=None, archivo_salida='mapa_semaforos.html'):
     """
@@ -881,7 +857,7 @@ def simular_y_obtener_metricas(red_vial, duracion_sim):
             interseccion.cola_vehiculos[semaforo_id] = deque()
     
     # Simular llegadas con tasa promedio
-    tasa_llegada = 0.4  # Ejemplo, ajustar según necesidad
+    tasa_llegada = 2.0  # Ejemplo, ajustar según necesidad
     red_vial.simular_llegada_poisson(tasa_llegada, duracion_sim)
     
     # Simular tráfico
@@ -890,7 +866,11 @@ def simular_y_obtener_metricas(red_vial, duracion_sim):
     # Garantizar que no haya valores nulos o negativos
     tiempo_promedio = max(0.01, tiempo_promedio)
     congestion = max(0.01, congestion)  # Evitar congestión cero
-    
+
+    print("Resultados de simular y obtener metricas.")
+    print(tiempo_promedio)
+    print(congestion)
+
     return tiempo_promedio, congestion
 
 def crear_tabla_resultados(soluciones, tiempos_espera, congestiones, tiempo_original, congestion_original):
@@ -949,7 +929,7 @@ def crear_tabla_resultados(soluciones, tiempos_espera, congestiones, tiempo_orig
 
     for i, solucion in enumerate(soluciones):
         # Fix: Handle edge case with appropriate checks
-        if tiempo_original > 0.1:  # Only calculate if original value is meaningful
+        if tiempo_original > 0:  # Only calculate if original value is meaningful
             mejora_tiempo = ((tiempo_original - tiempos_espera[i]) / tiempo_original) * 100
             clase_tiempo = "mejora" if mejora_tiempo > 0 else "empeora"
             texto_tiempo = "{:.2f}%{}".format(abs(mejora_tiempo), "↓" if mejora_tiempo > 0 else "↑")
@@ -957,9 +937,9 @@ def crear_tabla_resultados(soluciones, tiempos_espera, congestiones, tiempo_orig
             mejora_tiempo = 0
             clase_tiempo = ""
             texto_tiempo = "N/A"
-        
+
         # Fix: Handle edge case with appropriate checks
-        if congestion_original > 1:  # Only calculate if original value is meaningful
+        if congestion_original > 0:  # Only calculate if original value is meaningful
             mejora_congestion = ((congestion_original - congestiones[i]) / congestion_original) * 100
             clase_congestion = "mejora" if mejora_congestion > 0 else "empeora"
             texto_congestion = "{:.2f}%{}".format(abs(mejora_congestion), "↓" if mejora_congestion > 0 else "↑")
