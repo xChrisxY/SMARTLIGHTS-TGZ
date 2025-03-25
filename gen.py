@@ -11,6 +11,7 @@ import io
 import base64
 from IPython.display import display, HTML
 import copy
+import networkx as nx
 
 # Modificación en la función cargar_red_vial
 def cargar_red_vial(archivo_json):
@@ -997,7 +998,8 @@ def visualizar_resultados_completos(red_vial, mejores_soluciones):
     for i in range(min(3, len(mejores_soluciones))):
         print(f"- mapa_solucion_{i+1}.html (Mapa con la solución #{i+1})")
 
-# Modificar la función main para incluir la visualización
+
+# modificar la función main para incluir la visualización
 def main():
     # Cargar red vial desde JSON
     red_vial = cargar_red_vial("zona_delimitada.json")
@@ -1010,7 +1012,7 @@ def main():
         prob_cruce=0.8,
         prob_mutacion=0.1,
         elitismo=0.05,
-        max_generaciones=100
+        max_generaciones=50
     )
     
     # Ejecutar algoritmo
