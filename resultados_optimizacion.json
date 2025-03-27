@@ -1,0 +1,36 @@
+{
+    "soluciones": [
+        {
+            "nombre": "Original (sin optimizar)",
+            "fitness": null,
+            "tiempo_espera": 509.5124806532359,
+            "mejora_tiempo": null,
+            "congestion": 63911,
+            "mejora_congestion": null
+        },
+        {
+            "nombre": "Solución 1",
+            "fitness": 0.053438785870785016,
+            "tiempo_espera": 368.8864100277151,
+            "mejora_tiempo": 27.600122855720215,
+            "congestion": 47493.0,
+            "mejora_congestion": 25.688848555021828
+        },
+        {
+            "nombre": "Solución 2",
+            "fitness": 0.053438785870785016,
+            "tiempo_espera": 359.9366318248525,
+            "mejora_tiempo": 29.35666043677972,
+            "congestion": 46899.0,
+            "mejora_congestion": 26.61826602619267
+        },
+        {
+            "nombre": "Solución 3",
+            "fitness": 0.053438785870785016,
+            "tiempo_espera": 365.58069967990065,
+            "mejora_tiempo": 28.248921555131123,
+            "congestion": 47021.0,
+            "mejora_congestion": 26.42737556915085
+        }
+    ]
+}

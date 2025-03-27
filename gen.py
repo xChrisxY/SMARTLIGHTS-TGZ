@@ -9,7 +9,6 @@ import matplotlib.colors as mcolors
 from matplotlib.cm import get_cmap
 import io
 import base64
-from IPython.display import display, HTML
 import copy
 
 # Modificación en la función cargar_red_vial
@@ -874,7 +873,41 @@ def simular_y_obtener_metricas(red_vial, duracion_sim):
     return tiempo_promedio, congestion
 
 def crear_tabla_resultados(soluciones, tiempos_espera, congestiones, tiempo_original, congestion_original):
+    # Crear estructura de datos para JSON
+    resultados_json = {
+        "soluciones": [
+            {
+                "nombre": "Original (sin optimizar)",
+                "fitness": None,
+                "tiempo_espera": tiempo_original,
+                "mejora_tiempo": None,
+                "congestion": congestion_original,
+                "mejora_congestion": None
+            }
+        ]
+    }
     
+    # Agregar datos de cada solución al JSON
+    for i, solucion in enumerate(soluciones):
+        mejora_tiempo = ((tiempo_original - tiempos_espera[i]) / tiempo_original) * 100 if tiempo_original > 0 else 0
+        mejora_congestion = ((congestion_original - congestiones[i]) / congestion_original) * 100 if congestion_original > 0 else 0
+        
+        resultados_json["soluciones"].append({
+            "nombre": f"Solución {i+1}",
+            "fitness": float(solucion.fitness),
+            "tiempo_espera": float(tiempos_espera[i]),
+            "mejora_tiempo": float(mejora_tiempo),
+            "congestion": float(congestiones[i]),
+            "mejora_congestion": float(mejora_congestion)
+        })
+    
+    # Guardar JSON
+    with open('resultados_optimizacion.json', 'w', encoding='utf-8') as f:
+        json.dump(resultados_json, f, indent=4, ensure_ascii=False)
+    
+    print("Resultados guardados en formato JSON en 'resultados_optimizacion.json'")
+    
+    # Generar HTML como antes
     html = """
     <html>
     <head>
@@ -932,7 +965,8 @@ def crear_tabla_resultados(soluciones, tiempos_espera, congestiones, tiempo_orig
         if tiempo_original > 0:  # Only calculate if original value is meaningful
             mejora_tiempo = ((tiempo_original - tiempos_espera[i]) / tiempo_original) * 100
             clase_tiempo = "mejora" if mejora_tiempo > 0 else "empeora"
-            texto_tiempo = "{:.2f}%{}".format(abs(mejora_tiempo), "↓" if mejora_tiempo > 0 else "↑")
+            # Replace Unicode arrow with HTML entity
+            texto_tiempo = "{:.2f}%{}".format(abs(mejora_tiempo), "&darr;" if mejora_tiempo > 0 else "&uarr;")
         else:
             mejora_tiempo = 0
             clase_tiempo = ""
@@ -942,7 +976,8 @@ def crear_tabla_resultados(soluciones, tiempos_espera, congestiones, tiempo_orig
         if congestion_original > 0:  # Only calculate if original value is meaningful
             mejora_congestion = ((congestion_original - congestiones[i]) / congestion_original) * 100
             clase_congestion = "mejora" if mejora_congestion > 0 else "empeora"
-            texto_congestion = "{:.2f}%{}".format(abs(mejora_congestion), "↓" if mejora_congestion > 0 else "↑")
+            # Replace Unicode arrow with HTML entity
+            texto_congestion = "{:.2f}%{}".format(abs(mejora_congestion), "&darr;" if mejora_congestion > 0 else "&uarr;")
         else:
             mejora_congestion = 0
             clase_congestion = ""
@@ -968,7 +1003,8 @@ def crear_tabla_resultados(soluciones, tiempos_espera, congestiones, tiempo_orig
     </html>
     """
     
-    with open('resultados_optimizacion.html', 'w') as f:
+    # Explicitly specify UTF-8 encoding when writing the file
+    with open('resultados_optimizacion.html', 'w', encoding='utf-8') as f:
         f.write(html)
     
     print("Tabla de resultados generada y guardada como 'resultados_optimizacion.html'")
@@ -994,6 +1030,7 @@ def visualizar_resultados_completos(red_vial, mejores_soluciones):
     print("- mapa_original.html (Mapa con la configuración original)")
     print("- comparativa_soluciones.png (Gráfico comparativo)")
     print("- resultados_optimizacion.html (Tabla de resultados)")
+
     for i in range(min(3, len(mejores_soluciones))):
         print(f"- mapa_solucion_{i+1}.html (Mapa con la solución #{i+1})")
 

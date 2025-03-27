@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulación AG - SMARTLIGHTS-TGZ</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .header {
+            font-size: 15px;
+            background-color: #2c3e50;
+            color: white;
+            padding: .5rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .map-container {
+            flex: 3;
+            position: relative;
+        }
+
+        #mapa {
+            width: 100%;
+            height: 100%;
+        }
+
+        .control-panel {
+            flex: 1;
+            max-width: 400px;
+            background-color: #f8f9fa;
+            padding: 1rem;
+            overflow-y: auto;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: 8px;
+            padding: .5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .vehicle {
+            width: 8px;
+            height: 8px;
+            background-color: #3498db;
+            border-radius: 50%;
+            position: absolute;
+            transition: all 0.5s linear;
+        }
+
+        .traffic-light-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .traffic-light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .traffic-light.verde {
+            background-color: #4CAF50;
+            box-shadow: 0 0 5px #4CAF50;
+        }
+
+        .traffic-light.amarillo {
+            background-color: #FFC107;
+            box-shadow: 0 0 5px #FFC107;
+        }
+
+        .traffic-light.rojo {
+            background-color: #F44336;
+            box-shadow: 0 0 5px #F44336;
+        }
+
+        .traffic-light-text {
+            font-size: 14px;
+            text-transform: capitalize;
+            margin-left: 4px;
+        }
+
+        /* Asegurar que la celda de la tabla tenga suficiente espacio */
+        td .traffic-light-container {
+            min-width: 100px;
+            padding: 4px 0;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: .5rem;
+            margin-bottom: 1rem;
+        }
+
+        button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            background-color: #2c3e50;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #34495e;
+        }
+
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        .slider-container label {
+            display: block;
+        }
+
+        input[type="range"] {
+            width: 100%;
+        }
+
+        .stats-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .improvement {
+            color: #27ae60;
+        }
+
+        .deterioration {
+            color: #c0392b;
+        }
+
+        .intersection-info {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 10px;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Simulación de Tráfico Optimizada - SMARTLIGHTS-TGZ</h1>
+        <div>
+            <span id="tiempo">Tiempo: 0s</span>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="map-container">
+            <div id="mapa"></div>
+            <div class="legend">
+                <h4 style="margin: 0 0 10px 0">Flujo de Tráfico</h4>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #ffffb2;"></div>
+                    <span>Bajo</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #fecc5c;"></div>
+                    <span>Medio</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #fd8d3c;"></div>
+                    <span>Alto</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #e31a1c;"></div>
+                    <span>Muy alto</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div class="controls">
+                <h2>Controles</h2>
+                <button id="btn-iniciar">Iniciar Simulación</button>
+                <button id="btn-pausar" disabled>Pausar</button>
+                <button id="btn-reiniciar">Reiniciar</button>
+                <br>
+                <div class="slider-container">
+                    <label for="velocidad">Velocidad de Simulación:</label>
+                    <input type="range" id="velocidad" min="1" max="10" value="5">
+                    <span id="valor-velocidad">5x</span>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="tasa-llegada">Tasa de Llegada de Vehículos:</label>
+                    <input type="range" id="tasa-llegada" min="0.1" max="5" step="0.1" value="2">
+                    <span id="valor-tasa">2.0 veh/s</span>
+                </div>
+            </div>
+
+            <div class="stats-card">
+                <h3>Estadísticas en Tiempo Real</h3>
+                <p>
+                    <strong>Tiempo Promedio de Espera:</strong>
+                    <span id="tiempo-espera" class="stats-value">0.0s</span>
+                </p>
+                <p>
+                    <strong>Nivel de Congestión:</strong>
+                    <span id="congestion" class="stats-value">0</span>
+                </p>
+                <p>
+                    <strong>Vehículos Procesados:</strong>
+                    <span id="vehiculos-procesados" class="stats-value">0</span>
+                </p>
+            </div>
+
+            <div class="stats-card">
+                <h3>Comparativa con AG</h3>
+                <p>
+                    <strong>Mejora en Tiempo:</strong>
+                    <span id="mejora-tiempo" class="stats-value improvement">0%</span>
+                </p>
+                <p>
+                    <strong>Mejora en Congestión:</strong>
+                    <span id="mejora-congestion" class="stats-value improvement">0%</span>
+                </p>
+            </div>
+
+            <div class="intersection-info">
+                <h3>Información de Intersección</h3>
+                <div id="semaforo-info">
+                    <p>Selecciona una intersección en el mapa para ver detalles.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="simulacion_ag.js"></script>
+</body>
+</html> 
