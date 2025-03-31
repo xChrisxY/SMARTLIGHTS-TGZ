@@ -156,7 +156,8 @@ function dibujarCalles() {
 
 // Obtener color según flujo
 function obtenerColorFlujo(normalizado) {
-    const colores = ['#ffffb2', '#fecc5c', '#fd8d3c', '#e31a1c'];
+    //const colores = ['#ffffb2', '#fecc5c', '#fd8d3c', '#e31a1c'];
+    const colores = ['#fffff', '#fffff', '#fffff', '#fffff'];
     const indice = Math.floor(normalizado * (colores.length - 1));
     return colores[Math.min(indice, colores.length - 1)];
 }
@@ -253,18 +254,25 @@ function poissonRandom(lambda) {
 
 // Agregar vehículo visual al mapa
 function agregarVehiculoVisual(vehiculo, coordenadas) {
+    // Posición aleatoria cercana
     const offset = {
-        lat: (Math.random() - 0.5) * 0.0004,
-        lng: (Math.random() - 0.5) * 0.0004
+        lat: (Math.random() - 0.5) * 0.0002,
+        lng: (Math.random() - 0.5) * 0.0002
     };
 
-    const vehiculoMarker = L.marker([coordenadas.lat + offset.lat, coordenadas.lng + offset.lng], {
-        icon: L.divIcon({
-            className: 'vehicle',
-            html: '',
-            iconSize: [8, 8]
-        })
-    }).addTo(mapa);
+    const colores = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6f42c1'];
+    const color = colores[vehiculo.semaforoId % colores.length];
+
+    const vehiculoMarker = L.marker(
+        [coordenadas.lat + offset.lat, coordenadas.lng + offset.lng],
+        {
+            icon: L.divIcon({
+                className: 'vehicle',
+                html: `<div style="width:8px;height:8px;border-radius:50%;background:${color}"></div>`,
+                iconSize: [8, 8]
+            })
+        }
+    ).addTo(mapa);
 
     vehiculosElements.push({
         id: vehiculo.id,
@@ -272,6 +280,8 @@ function agregarVehiculoVisual(vehiculo, coordenadas) {
         semaforoId: vehiculo.semaforoId
     });
 }
+
+
 
 // Procesar semáforos y mover vehículos
 function procesarSemaforos() {
@@ -289,26 +299,24 @@ function procesarSemaforos() {
         }
 
         if (estado === 'verde') {
-            const capacidad = 3; // Vehículos por ciclo verde
-            const numProcesar = Math.min(capacidad, cola.length);
-
-            for (let i = 0; i < numProcesar; i++) {
-                if (cola.length > 0) {
-                    const vehiculo = cola.shift();
-                    const tiempoEspera = tiempoActual - vehiculo.tiempoLlegada;
-
-                    tiempoEsperaTotal += tiempoEspera;
-                    vehiculosProcesados++;
-
-                    // Eliminar vehículo visual
-                    const index = vehiculosElements.findIndex(v => v.id === vehiculo.id);
-                    if (index !== -1) {
-                        mapa.removeLayer(vehiculosElements[index].marker);
-                        vehiculosElements.splice(index, 1);
-                    }
+            const capacidad = 1; // Solo procesar uno por tick
+            if (cola.length > 0) {
+                const vehiculo = cola.shift();
+                const tiempoEsperaVeh = tiempoActual - vehiculo.tiempoLlegada;
+        
+                // Eliminar visual
+                const index = vehiculosElements.findIndex(v => v.id === vehiculo.id);
+                if (index !== -1) {
+                    mapa.removeLayer(vehiculosElements[index].marker);
+                    vehiculosElements.splice(index, 1);
                 }
+        
+                // Actualizar estadísticas
+                vehiculosAtendidos++;
+                tiempoEspera = (tiempoEspera * (vehiculosAtendidos - 1) + tiempoEsperaVeh) / vehiculosAtendidos;
             }
         }
+        
 
         congestionTotal += cola.length;
     });
@@ -326,6 +334,36 @@ function procesarSemaforos() {
     // Actualizar UI
     actualizarEstadisticas();
 }
+
+function procesarColaConDelay(semaforoId, numProcesar, delayBase = 200) {
+    const cola = colas[semaforoId];
+    let tiempoEsperaLocal = 0;
+
+    for (let i = 0; i < numProcesar; i++) {
+        if (cola.length > 0) {
+            const vehiculo = cola.shift();
+            const tiempoEsperaVeh = tiempoActual - vehiculo.tiempoLlegada;
+            tiempoEsperaLocal += tiempoEsperaVeh;
+
+            setTimeout(() => {
+                // Eliminar visualmente
+                const index = vehiculosElements.findIndex(v => v.id === vehiculo.id);
+                if (index !== -1) {
+                    mapa.removeLayer(vehiculosElements[index].marker);
+                    vehiculosElements.splice(index, 1);
+                }
+
+                // Actualizar stats
+                vehiculosAtendidos++;
+                tiempoEspera = (tiempoEspera * (vehiculosAtendidos - 1) + tiempoEsperaVeh) / vehiculosAtendidos;
+
+                actualizarEstadisticas();
+
+            }, delayBase * i); // Se acumula el retraso en cadena
+        }
+    }
+}
+
 
 // Actualizar estadísticas en la UI
 function actualizarEstadisticas() {
