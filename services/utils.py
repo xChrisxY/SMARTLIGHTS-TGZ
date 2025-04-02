@@ -1,5 +1,3 @@
-import numpy as np
-import random
 import matplotlib.pyplot as plt
 from collections import deque
 import json
@@ -10,8 +8,6 @@ from matplotlib.cm import get_cmap
 import io
 import base64
 import copy
-from models.algoritmo_genetico import AlgoritmoGenetico
-from models.individuo_ag import IndividuoAG
 from models.red_vial import RedVial
 from models.semaforo import Semaforo
 from models.interseccion import Interseccion
@@ -664,40 +660,3 @@ def visualizar_resultados_completos(red_vial, mejores_soluciones):
 
     for i in range(min(3, len(mejores_soluciones))):
         print(f"- mapa_solucion_{i+1}.html (Mapa con la solución #{i+1})")
-
-# Modificar la función main para incluir la visualización
-def main():
-    # Cargar red vial desde JSON
-    red_vial = cargar_red_vial("zona_delimitada.json")
-    
-    # Configurar y ejecutar algoritmo genético
-    ag = AlgoritmoGenetico(
-        tamaño_poblacion=50,
-        num_semaforos=len([s for i in red_vial.intersecciones for s in i.semaforos]),
-        red_vial=red_vial,
-        prob_cruce=0.8,
-        prob_mutacion=0.1,
-        elitismo=0.05,
-        max_generaciones=100
-    )
-    
-    # Ejecutar algoritmo
-    ag.ejecutar()
-    
-    # Graficar evolución
-    ag.graficar_evolucion()
-    
-    # Obtener mejores soluciones
-    mejores = ag.obtener_mejores_soluciones(3)
-    
-    print("\nLas tres mejores soluciones:")
-    for i, sol in enumerate(mejores):
-        print(f"\nSolución #{i+1} (Fitness: {sol.fitness:.6f}):")
-        for semaforo in sol.cromosoma:
-            print(semaforo)
-    
-    # Generar visualizaciones completas
-    visualizar_resultados_completos(red_vial, mejores)
-
-if __name__ == "__main__":
-    main()
